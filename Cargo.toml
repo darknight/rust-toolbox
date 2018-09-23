@@ -1,0 +1,6 @@
+[package]
+name = "rust-toolbox"
+version = "0.1.0"
+authors = ["Eric <illuminating.me@gmail.com>"]
+
+[dependencies]
