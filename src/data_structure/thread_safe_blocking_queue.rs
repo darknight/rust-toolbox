@@ -10,28 +10,28 @@ pub struct BlockingQueue<T> {
 
 impl<T> BlockingQueue<T> {
 
-    fn new() -> BlockingQueue<T> {
+    pub fn new() -> BlockingQueue<T> {
         BlockingQueue {
             queue: Arc::new(Mutex::new(VecDeque::new()))
         }
     }
 
-    fn add(&self, item: T) {
+    pub fn add(&self, item: T) {
         let mut queue = self.queue.lock().unwrap();
         queue.push_back(item);
     }
 
-    fn poll(&self) -> Option<T> {
+    pub fn poll(&self) -> Option<T> {
         let mut queue = self.queue.lock().unwrap();
         queue.pop_front()
     }
 
-    fn clear(&self) {
+    pub fn clear(&self) {
         let mut queue = self.queue.lock().unwrap();
         queue.clear();
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.is_empty()
     }
@@ -132,5 +132,14 @@ mod tests {
         let sum2 = handle2.join().unwrap_or_default();
 
         assert_eq!(sum1 + sum2, 5050);
+    }
+
+    #[test]
+    fn test_fn() {
+        let queue = BlockingQueue::new();
+        let f = move || false;
+        queue.add(f);
+        let res = queue.poll().unwrap();
+        assert_eq!(res(), false);
     }
 }
