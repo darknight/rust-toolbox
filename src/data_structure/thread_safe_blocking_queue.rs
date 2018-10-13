@@ -35,6 +35,11 @@ impl<T> BlockingQueue<T> {
         let queue = self.queue.lock().unwrap();
         queue.is_empty()
     }
+
+    pub fn size(&self) -> usize {
+        let queue = self.queue.lock().unwrap();
+        queue.len()
+    }
 }
 
 impl<T> Clone for BlockingQueue<T> {
@@ -62,17 +67,20 @@ mod tests {
         queue.add(2);
         queue.add(1);
 
+        assert_eq!(queue.size(), 3);
         assert_eq!(queue.is_empty(), false);
 
         let res2 = queue.poll().unwrap();
 
         assert_eq!(res2, 3);
+        assert_eq!(queue.size(), 2);
         assert_eq!(queue.is_empty(), false);
 
         queue.clear();
         let res3 = queue.poll();
 
         assert_eq!(res3, None);
+        assert_eq!(queue.size(), 0);
         assert_eq!(queue.is_empty(), true);
     }
 
