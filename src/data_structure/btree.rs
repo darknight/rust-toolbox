@@ -4,6 +4,9 @@
 /// https://www.geeksforgeeks.org/b-tree-set-1-insert-2/
 /// https://www.geeksforgeeks.org/b-tree-set-3delete/
 ///
+/// original motivation is from these posts:
+/// https://cstack.github.io/db_tutorial/
+///
 
 use std::hash::Hash;
 use std::fmt::Debug;
