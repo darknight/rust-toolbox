@@ -1,9 +1,7 @@
 [package]
-name = "rust-toolbox"
+name = "hash"
 version = "0.1.0"
 authors = ["darknight <illuminating.me@gmail.com>"]
+edition = "2018"
 
-[workspace]
-members = [
-    "hash",
-]
+[dependencies]
