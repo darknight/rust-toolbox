@@ -3,7 +3,7 @@ use std::error::Error;
 use super::observer::*;
 
 enum Source<'a, T> {
-    Creator(Box<dyn Fn(Box<dyn Observer<T>>) + 'a>),
+    Creator(Box<dyn Fn(Box<dyn Observer<T> + 'a>) + 'a>),
     Just(Option<T>),
     Defer(Box<dyn Fn() -> Observable<'a, T> + 'a>),
 }
@@ -12,7 +12,7 @@ pub struct Observable<'a, T> {
     source: Source<'a, T>
 }
 
-impl<'a, T> Observable<'a, T> {
+impl<'a, T> Observable<'a, T> where T: 'a {
 
     ///
     /// create an Observable from scratch by means of a function
@@ -20,7 +20,7 @@ impl<'a, T> Observable<'a, T> {
     /// F: FnOnce(impl Observer)
     /// `impl Trait` not allowed outside of function and inherent method return types
     ///
-    pub fn create<F>(f: F) -> Self where F: Fn(Box<dyn Observer<T>>) + 'a {
+    pub fn create<F>(f: F) -> Self where F: Fn(Box<dyn Observer<T> + 'a>) + 'a {
         Observable { source: Source::Creator(Box::new(f)) }
     }
 
@@ -35,6 +35,8 @@ impl<'a, T> Observable<'a, T> {
     /// do not create the Observable until the observer subscribes,
     /// and create a fresh Observable for each observer
     ///
+    /// FIXME: change to FnOnce()
+    ///
     pub fn defer<F>(f: F) -> Self where F: Fn() -> Observable<'a, T> + 'a {
         Observable { source: Source::Defer(Box::new(f)) }
     }
@@ -45,9 +47,9 @@ impl<'a, T> Observable<'a, T> {
     /// FIXME: change Fn to FnOnce for error & completed
     ///
     pub fn subscribe<N, E, C>(self, next: N, error: E, completed: C) -> ()
-        where N: Fn(T),
-              E: Fn(Box<dyn Error>),
-              C: Fn() {
+        where N: Fn(T) + 'a,
+              E: Fn(Box<dyn Error>) + 'a,
+              C: Fn() + 'a {
 
         match self.source {
             Source::Creator(creator) => {
@@ -56,7 +58,8 @@ impl<'a, T> Observable<'a, T> {
                     error,
                     completed
                 );
-//                (creator)(Box::new(observer));
+                let x = Box::new(observer);
+                (creator)(x);
             },
             _ => unimplemented!()
         }
@@ -133,8 +136,9 @@ mod tests {
             fn new() -> SomeType { SomeType { value: "default".to_string() } }
             fn set_value(&mut self, value: String) { self.value = value; }
             fn value_observable<'a>(&self) -> Observable<'a, String> {
-                let val = self.value.clone();
-                Observable::defer(move || Observable::just(val.clone()))
+                // FIXME
+                let f = || Observable::just(String::new());
+                Observable::defer(f)
             }
         }
 
