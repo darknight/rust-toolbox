@@ -115,15 +115,14 @@ mod tests {
         impl SomeType {
             fn new() -> SomeType { SomeType { value: "default".to_string() } }
             fn set_value(&mut self, value: String) { self.value = value; }
-            fn value_observable<'a>(&self) -> Observable<'a, String> {
-                Observable::just(self.value.clone())
+            fn value_observable<'a>(&'a self) -> Observable<'a, &String> {
+                Observable::just(&self.value)
             }
         }
 
         let mut t = SomeType::new();
         let value = t.value_observable();
-        t.set_value("new".to_string());
-        value.subscribe_on_next(|x| assert_eq!(x, "default".to_string()));
+        value.subscribe_on_next(|x| assert_eq!(x, &"default".to_string()));
     }
 
     ///
@@ -135,16 +134,14 @@ mod tests {
         impl SomeType {
             fn new() -> SomeType { SomeType { value: "default".to_string() } }
             fn set_value(&mut self, value: String) { self.value = value; }
-            fn value_observable<'a>(&self) -> Observable<'a, String> {
-                // FIXME
-                let f = || Observable::just(String::new());
+            fn value_observable<'a>(&'a self) -> Observable<'a, &String> {
+                let f = move || Observable::just(&self.value);
                 Observable::defer(f)
             }
         }
 
-        let mut t = SomeType::new();
+        let t = SomeType::new();
         let value = t.value_observable();
-        t.set_value("new".to_string());
-        value.subscribe_on_next(|x| assert_eq!(x, "new".to_string()));
+        value.subscribe_on_next(|x| assert_eq!(x, &"default".to_string()));
     }
 }
