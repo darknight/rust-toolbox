@@ -3,9 +3,9 @@ use std::error::Error;
 use super::observer::*;
 
 enum Source<'a, T> {
-    Creator(Box<dyn Fn(Box<dyn Observer<T> + 'a>) + 'a>),
+    Creator(Box<dyn FnOnce(Box<dyn Observer<T> + 'a>) + 'a>),
     Just(Option<T>),
-    Defer(Box<dyn Fn() -> Observable<'a, T> + 'a>),
+    Defer(Box<dyn FnOnce() -> Observable<'a, T> + 'a>),
 }
 
 pub struct Observable<'a, T> {
@@ -20,7 +20,7 @@ impl<'a, T> Observable<'a, T> where T: 'a {
     /// F: FnOnce(impl Observer)
     /// `impl Trait` not allowed outside of function and inherent method return types
     ///
-    pub fn create<F>(f: F) -> Self where F: Fn(Box<dyn Observer<T> + 'a>) + 'a {
+    pub fn create<F>(f: F) -> Self where F: FnOnce(Box<dyn Observer<T> + 'a>) + 'a {
         Observable { source: Source::Creator(Box::new(f)) }
     }
 
@@ -35,21 +35,17 @@ impl<'a, T> Observable<'a, T> where T: 'a {
     /// do not create the Observable until the observer subscribes,
     /// and create a fresh Observable for each observer
     ///
-    /// FIXME: change to FnOnce()
-    ///
-    pub fn defer<F>(f: F) -> Self where F: Fn() -> Observable<'a, T> + 'a {
+    pub fn defer<F>(f: F) -> Self where F: FnOnce() -> Observable<'a, T> + 'a {
         Observable { source: Source::Defer(Box::new(f)) }
     }
 
     ///
     /// operate upon the emissions and notifications from an Observable
     ///
-    /// FIXME: change Fn to FnOnce for error & completed
-    ///
     pub fn subscribe<N, E, C>(self, next: N, error: E, completed: C) -> ()
         where N: Fn(T) + 'a,
-              E: Fn(Box<dyn Error>) + 'a,
-              C: Fn() + 'a {
+              E: FnOnce(Box<dyn Error>) + 'a,
+              C: FnOnce() + 'a {
 
         match self.source {
             Source::Creator(creator) => {
@@ -96,7 +92,7 @@ mod tests {
             for i in 1..5 {
                 observer.on_next(i);
             }
-            observer.on_completed();
+            (*observer).on_completed();
         });
 
         source.subscribe(

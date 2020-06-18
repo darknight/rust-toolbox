@@ -12,6 +12,9 @@
 /// 5. shutdown/terminate explicitly
 
 // TODO: implement concurrent linked queue, then replace blocking queue with it
+// TODO: refer other implementation
+// 1) https://github.com/rayon-rs/rayon/tree/master/rayon-core/src/thread_pool
+// 2) https://github.com/rust-threadpool/rust-threadpool
 
 
 use std::thread;
